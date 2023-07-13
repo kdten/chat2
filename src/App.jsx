@@ -5,6 +5,10 @@ import 'firebase/firestore';
 import 'firebase/auth';
 // import 'firebase/analytics';
 
+import { useStoreState } from 'pullstate';
+import { UserStore } from "../store.js";
+
+
 import { auth, firestore } from '/firebase.js'
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import { getFirestore, collection, addDoc, getDocs } from "firebase/firestore";
@@ -14,29 +18,26 @@ import ChatLayout from './components/ChatLayout';
 
 
 function App() {
-  const [user, setUser] = useState(null);
-
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, setUser);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      UserStore.update((s) => {
+        s.user = user;
+      });
+    });
     return () => unsubscribe();
   }, []);
+
+  const user = useStoreState(UserStore, s => s.user);
 
 
   return (
     <div className="App">
-      <header>
-        <h1>⚛️🔥💬</h1>
-        <SignOut />
-      </header>
-
       <section>
         {user ? <ChatLayout /> : <SignIn />}
       </section>
-
     </div>
   );
 }
-
 
 function SignIn() {
   const signInWithGoogle = () => {
